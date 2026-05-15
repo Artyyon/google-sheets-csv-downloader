@@ -77,18 +77,12 @@ import requests
 from openpyxl import load_workbook
 from requests.exceptions import RequestException
 
-
 # =========================================================
 # LOGGING CONFIGURATION
 # =========================================================
 
 logging.basicConfig(
-    level=logging.INFO,
-    format=(
-        "%(asctime)s | "
-        "%(levelname)s | "
-        "%(message)s"
-    )
+    level=logging.INFO, format=("%(asctime)s | " "%(levelname)s | " "%(message)s")
 )
 
 logger = logging.getLogger(__name__)
@@ -106,14 +100,14 @@ CSV_EXPORT_URL = (
 )
 
 XLSX_EXPORT_URL = (
-    "https://docs.google.com/spreadsheets/d/"
-    "{sheet_id}/export?format=xlsx"
+    "https://docs.google.com/spreadsheets/d/" "{sheet_id}/export?format=xlsx"
 )
 
 
 # =========================================================
 # CUSTOM EXCEPTIONS
 # =========================================================
+
 
 class GoogleSheetsError(Exception):
     """
@@ -136,6 +130,7 @@ class SheetMetadataError(GoogleSheetsError):
 # =========================================================
 # UTILITIES
 # =========================================================
+
 
 def extract_sheet_id(sheet_url: str) -> str:
     """
@@ -170,9 +165,7 @@ def extract_sheet_id(sheet_url: str) -> str:
     match = re.search(pattern, sheet_url)
 
     if not match:
-        raise InvalidGoogleSheetsURL(
-            "Could not extract spreadsheet ID from URL."
-        )
+        raise InvalidGoogleSheetsURL("Could not extract spreadsheet ID from URL.")
 
     return match.group(1)
 
@@ -210,50 +203,33 @@ def get_sheet_names(sheet_id: str) -> list[str]:
 
     try:
 
-        xlsx_url = XLSX_EXPORT_URL.format(
-            sheet_id=sheet_id
-        )
+        xlsx_url = XLSX_EXPORT_URL.format(sheet_id=sheet_id)
 
-        logger.info(
-            "Retrieving worksheet metadata..."
-        )
+        logger.info("Retrieving worksheet metadata...")
 
-        response = requests.get(
-            xlsx_url,
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(xlsx_url, timeout=REQUEST_TIMEOUT)
 
         response.raise_for_status()
 
-        workbook = load_workbook(
-            filename=BytesIO(response.content),
-            read_only=True
-        )
+        workbook = load_workbook(filename=BytesIO(response.content), read_only=True)
 
         sheet_names = workbook.sheetnames
 
         if not sheet_names:
-            raise SheetMetadataError(
-                "No worksheets found in spreadsheet."
-            )
+            raise SheetMetadataError("No worksheets found in spreadsheet.")
 
-        logger.info(
-            "Found %d worksheet(s).",
-            len(sheet_names)
-        )
+        logger.info("Found %d worksheet(s).", len(sheet_names))
 
         return sheet_names
 
     except RequestException as error:
         raise SheetMetadataError(
-            f"Connection error while retrieving "
-            f"worksheet metadata: {error}"
+            f"Connection error while retrieving " f"worksheet metadata: {error}"
         ) from error
 
     except Exception as error:
         raise SheetMetadataError(
-            f"Unexpected error while retrieving "
-            f"worksheet metadata: {error}"
+            f"Unexpected error while retrieving " f"worksheet metadata: {error}"
         ) from error
 
 
@@ -274,22 +250,15 @@ def sanitize_filename(filename: str) -> str:
         Sanitized filename.
     """
 
-    return re.sub(
-        r'[\\/*?:"<>|]',
-        "_",
-        filename
-    )
+    return re.sub(r'[\\/*?:"<>|]', "_", filename)
 
 
 # =========================================================
 # CSV DOWNLOAD
 # =========================================================
 
-def download_sheet_as_csv(
-    sheet_id: str,
-    sheet_name: str,
-    output_dir: Path
-) -> None:
+
+def download_sheet_as_csv(sheet_id: str, sheet_name: str, output_dir: Path) -> None:
     """
     Download a single worksheet as a CSV file.
 
@@ -315,75 +284,48 @@ def download_sheet_as_csv(
 
     try:
 
-        logger.info(
-            "Downloading worksheet: %s",
-            sheet_name
-        )
+        logger.info("Downloading worksheet: %s", sheet_name)
 
         encoded_sheet_name = quote(sheet_name)
 
         csv_url = CSV_EXPORT_URL.format(
-            sheet_id=sheet_id,
-            sheet_name=encoded_sheet_name
+            sheet_id=sheet_id, sheet_name=encoded_sheet_name
         )
 
-        response = requests.get(
-            csv_url,
-            timeout=REQUEST_TIMEOUT
-        )
+        response = requests.get(csv_url, timeout=REQUEST_TIMEOUT)
 
         response.raise_for_status()
 
         response.encoding = "utf-8"
 
-        sheet_df = pd.read_csv(
-            StringIO(response.text)
-        )
+        sheet_df = pd.read_csv(StringIO(response.text))
 
-        safe_filename = sanitize_filename(
-            sheet_name
-        )
+        safe_filename = sanitize_filename(sheet_name)
 
-        output_file = (
-            output_dir /
-            f"{safe_filename}.csv"
-        )
+        output_file = output_dir / f"{safe_filename}.csv"
 
-        sheet_df.to_csv(
-            output_file,
-            index=False,
-            encoding="utf-8"
-        )
+        sheet_df.to_csv(output_file, index=False, encoding="utf-8")
 
-        logger.info(
-            "Worksheet saved: %s",
-            output_file
-        )
+        logger.info("Worksheet saved: %s", output_file)
 
     except pd.errors.ParserError as error:
 
-        logger.error(
-            "CSV parsing error in worksheet '%s': %s",
-            sheet_name,
-            error
-        )
+        logger.error("CSV parsing error in worksheet '%s': %s", sheet_name, error)
 
     except RequestException as error:
 
         logger.error(
-            "Connection error while downloading "
-            "worksheet '%s': %s",
+            "Connection error while downloading " "worksheet '%s': %s",
             sheet_name,
-            error
+            error,
         )
 
     except Exception as error:
 
         logger.error(
-            "Unexpected error while downloading "
-            "worksheet '%s': %s",
+            "Unexpected error while downloading " "worksheet '%s': %s",
             sheet_name,
-            error
+            error,
         )
 
 
@@ -391,10 +333,8 @@ def download_sheet_as_csv(
 # MAIN WORKFLOW
 # =========================================================
 
-def download_google_sheets(
-    sheet_url: str,
-    output_dir: str = "./data/"
-) -> None:
+
+def download_google_sheets(sheet_url: str, output_dir: str = "./data/") -> None:
     """
     Download all worksheets from a Google Sheets document
     as CSV files.
@@ -418,17 +358,11 @@ def download_google_sheets(
     partial success even if one worksheet fails.
     """
 
-    logger.info(
-        "=" * 60
-    )
+    logger.info("=" * 60)
 
-    logger.info(
-        "STARTING GOOGLE SHEETS DOWNLOAD"
-    )
+    logger.info("STARTING GOOGLE SHEETS DOWNLOAD")
 
-    logger.info(
-        "=" * 60
-    )
+    logger.info("=" * 60)
 
     try:
 
@@ -438,51 +372,29 @@ def download_google_sheets(
 
         output_path = Path(output_dir)
 
-        output_path.mkdir(
-            parents=True,
-            exist_ok=True
-        )
+        output_path.mkdir(parents=True, exist_ok=True)
 
-        logger.info(
-            "Output directory: %s",
-            output_path.resolve()
-        )
+        logger.info("Output directory: %s", output_path.resolve())
 
         # -------------------------------------------------
         # Spreadsheet ID
         # -------------------------------------------------
 
-        sheet_id = extract_sheet_id(
-            sheet_url
-        )
+        sheet_id = extract_sheet_id(sheet_url)
 
-        logger.info(
-            "Spreadsheet ID: %s",
-            sheet_id
-        )
+        logger.info("Spreadsheet ID: %s", sheet_id)
 
         # -------------------------------------------------
         # Worksheet discovery
         # -------------------------------------------------
 
-        sheet_names = get_sheet_names(
-            sheet_id
-        )
+        sheet_names = get_sheet_names(sheet_id)
 
-        logger.info(
-            "Worksheets discovered:"
-        )
+        logger.info("Worksheets discovered:")
 
-        for index, name in enumerate(
-            sheet_names,
-            start=1
-        ):
+        for index, name in enumerate(sheet_names, start=1):
 
-            logger.info(
-                "  %d. %s",
-                index,
-                name
-            )
+            logger.info("  %d. %s", index, name)
 
         # -------------------------------------------------
         # Worksheet downloads
@@ -491,28 +403,18 @@ def download_google_sheets(
         for sheet_name in sheet_names:
 
             download_sheet_as_csv(
-                sheet_id=sheet_id,
-                sheet_name=sheet_name,
-                output_dir=output_path
+                sheet_id=sheet_id, sheet_name=sheet_name, output_dir=output_path
             )
 
-        logger.info(
-            "Download process completed successfully."
-        )
+        logger.info("Download process completed successfully.")
 
     except GoogleSheetsError as error:
 
-        logger.error(
-            "Google Sheets error: %s",
-            error
-        )
+        logger.error("Google Sheets error: %s", error)
 
     except Exception as error:
 
-        logger.exception(
-            "Unexpected fatal error: %s",
-            error
-        )
+        logger.exception("Unexpected fatal error: %s", error)
 
 
 # =========================================================
@@ -527,7 +429,4 @@ if __name__ == "__main__":
         "edit?usp=sharing"
     )
 
-    download_google_sheets(
-        sheet_url=GOOGLE_SHEETS_URL,
-        output_dir="./data/"
-    )
+    download_google_sheets(sheet_url=GOOGLE_SHEETS_URL, output_dir="./data/")

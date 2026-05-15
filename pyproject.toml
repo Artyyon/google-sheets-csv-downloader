@@ -1,0 +1,43 @@
+[project]
+name = "google-sheets-csv-downloader"
+version = "0.1.0"
+description = "Production-ready utility for downloading all worksheets from Google Sheets as CSV files."
+readme = "README.md"
+license = { text = "MIT" }
+
+authors = [
+    { name = "Arthur" }
+]
+
+requires-python = ">=3.10"
+
+dependencies = [
+    "pandas>=2.0.0",
+    "requests>=2.31.0",
+    "openpyxl>=3.1.0"
+]
+
+keywords = [
+    "google-sheets",
+    "csv",
+    "data-engineering",
+    "python",
+    "automation"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent"
+]
+
+[tool.black]
+line-length = 88
+
+[tool.ruff]
+line-length = 88
+
+[tool.pytest.ini_options]
+pythonpath = [
+    "."
+]
